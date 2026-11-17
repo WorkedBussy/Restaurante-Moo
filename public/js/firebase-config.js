@@ -8,14 +8,13 @@
  */
 
 // ── 1. CREDENCIALES DE TU PROYECTO FIREBASE ────────────────────────────────
-// Copia estos datos desde: Firebase Console -> Configuración del proyecto -> Tus apps (Web </>)
 const firebaseConfig = {
-  apiKey: "TU_API_KEY_AQUI",
+  apiKey: "AIzaSyBsP46I077eo1EFzvvSU84KkUGBsoGb2-8",
   authDomain: "restaurante-moo.firebaseapp.com",
   projectId: "restaurante-moo",
-  storageBucket: "restaurante-moo.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef123456"
+  storageBucket: "restaurante-moo.firebasestorage.app",
+  messagingSenderId: "70817789983",
+  appId: "1:70817789983:web:a13fa743b04b02a8c1fd2a"
 };
 
 // ── 2. INICIALIZAR FIREBASE (Garantizar Singleton) ──────────────────────────
