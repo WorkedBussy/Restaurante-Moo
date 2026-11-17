@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal & Usuarios | Sabor & Fuego</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-light">
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-sm border-bottom border-danger">
+    <a class="navbar-brand fw-bold" href="dashboard.html">
+      <i class="bi bi-fire text-danger me-2"></i>Sabor & Fuego <span class="badge bg-danger ms-2 small">ADMIN</span>
+    </a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <a href="../catalogo.html" class="btn btn-outline-light btn-sm"><i class="bi bi-eye me-1"></i>Ver Carta</a>
+      <button class="btn btn-danger btn-sm" onclick="cerrarSesion()"><i class="bi bi-box-arrow-right me-1"></i>Salir</button>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- SIDEBAR -->
+      <nav class="col-md-3 col-lg-2 d-md-block admin-sidebar p-3">
+        <ul class="nav flex-column">
+          <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2 me-2"></i>Métricas</a></li>
+          <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="bi bi-receipt-cutoff me-2"></i>Gestión de Pedidos</a></li>
+          <li class="nav-item"><a class="nav-link" href="productos.html"><i class="bi bi-egg-fried me-2"></i>Platos & Stock</a></li>
+          <li class="nav-item"><a class="nav-link" href="categorias.html"><i class="bi bi-tags me-2"></i>Categorías</a></li>
+          <li class="nav-item"><a class="nav-link active" href="usuarios.html"><i class="bi bi-people me-2"></i>Personal & Usuarios</a></li>
+        </ul>
+      </nav>
+
+      <!-- ÁREA PRINCIPAL -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+        <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+          <div>
+            <h2 class="fw-bold mb-0">Gestión de Personal & Roles</h2>
+            <p class="text-muted small mb-0">Herencia de atributos de usuario con comportamiento diferenciado por rol</p>
+          </div>
+          <button class="btn btn-primary-custom btn-sm" onclick="abrirModalCrearUsuario()">
+            <i class="bi bi-person-plus me-1"></i>Crear Personal / Usuario
+          </button>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-4">Nombre y Apellido</th>
+                    <th>Correo Electrónico</th>
+                    <th>Identificación</th>
+                    <th>Teléfono</th>
+                    <th class="text-center">Rol Asignado</th>
+                    <th class="text-center">Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-usuarios-tbody">
+                  <tr><td colspan="6" class="text-center py-4 text-muted">Cargando usuarios...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL CREAR USUARIO / PERSONAL -->
+  <div class="modal fade" id="modalUsuario" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-4 border-0">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title fw-bold">Registrar Nuevo Miembro de Equipo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form onsubmit="handleCrearPersonal(event)">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nombre Completo *</label>
+              <input type="text" id="usr-nombre" class="form-control" placeholder="Ej: Carlos Zambrano" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Correo Electrónico *</label>
+              <input type="email" id="usr-email" class="form-control" placeholder="carlos@saboryfuego.com" required>
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Identificación / Cédula</label>
+                <input type="text" id="usr-id" class="form-control" placeholder="1312345678">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Teléfono</label>
+                <input type="text" id="usr-telefono" class="form-control" placeholder="0998765432">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Rol del Sistema *</label>
+              <select id="usr-rol" class="form-select" required>
+                <option value="mesero">Mesero (Atención en comedor y barra)</option>
+                <option value="repartidor">Repartidor (Entregas y delivery)</option>
+                <option value="administrador">Administrador (Control total y reportes)</option>
+                <option value="cliente">Cliente</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Contraseña Temporal *</label>
+              <input type="password" id="usr-pass" class="form-control" placeholder="Mínimo 6 caracteres" minlength="6" required>
+              <small class="text-muted">El colaborador podrá cambiarla tras su primer inicio de sesión.</small>
+            </div>
+          </div>
+          <div class="modal-footer border-top">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-usr" class="btn btn-primary-custom">Crear Cuenta de Personal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <!-- Capas del Proyecto -->
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    protegerPagina(["administrador"]);
+    let modalUsrBS = null;
+
+    async function iniciarPagina() {
+      modalUsrBS = new bootstrap.Modal(document.getElementById("modalUsuario"));
+      await cargarUsuarios();
+    }
+
+    async function cargarUsuarios() {
+      const tbody = document.getElementById("tabla-usuarios-tbody");
+      try {
+        const snap = await db.collection("usuarios").get();
+        const usuarios = [];
+        snap.forEach(d => usuarios.push({ id: d.id, ...d.data() }));
+
+        if (usuarios.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No hay usuarios registrados</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = usuarios.map(u => {
+          const badgeClass = {
+            administrador: "bg-danger",
+            mesero: "bg-warning text-dark",
+            repartidor: "bg-info text-dark",
+            cliente: "bg-primary"
+          }[u.rol] || "bg-secondary";
+
+          return `
+            <tr>
+              <td class="ps-4 fw-bold text-dark">
+                <i class="bi bi-person-circle me-2 text-muted"></i>${u.nombre || 'Sin nombre'}
+              </td>
+              <td>${u.email}</td>
+              <td class="text-muted small">${u.identificacion || 'N/A'}</td>
+              <td class="text-muted small">${u.telefono || 'N/A'}</td>
+              <td class="text-center"><span class="badge ${badgeClass} text-capitalize px-3 py-1">${u.rol || 'cliente'}</span></td>
+              <td class="text-center"><span class="badge bg-success-subtle text-success">Activo</span></td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        console.error("Error cargando usuarios:", err);
+      }
+    }
+
+    function abrirModalCrearUsuario() {
+      modalUsrBS.show();
+    }
+
+    async function handleCrearPersonal(e) {
+      e.preventDefault();
+      const nombre = document.getElementById("usr-nombre").value;
+      const email = document.getElementById("usr-email").value;
+      const iden = document.getElementById("usr-id").value;
+      const telf = document.getElementById("usr-telefono").value;
+      const rol = document.getElementById("usr-rol").value;
+      const pass = document.getElementById("usr-pass").value;
+      const btn = document.getElementById("btn-guardar-usr");
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creando...';
+
+      try {
+        // En frontend, para crear un segundo usuario sin perder la sesión admin actual,
+        // registramos el perfil en Firestore directamente
+        const docRef = await db.collection("usuarios").add({
+          nombre: nombre.trim(),
+          email: email.trim().toLowerCase(),
+          identificacion: iden.trim(),
+          telefono: telf.trim(),
+          rol: rol,
+          activo: true,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        modalUsrBS.hide();
+        mostrarToast(`Usuario con rol "${rol}" creado con éxito en Firestore`, "success");
+        await cargarUsuarios();
+      } catch (err) {
+        mostrarToast(err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "Crear Cuenta de Personal";
+      }
+    }
+  </script>
+</body>
+</html>

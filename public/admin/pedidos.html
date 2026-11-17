@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Pedidos & Cocina | Sabor & Fuego</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-light">
+
+  <!-- NAVBAR SUPERIOR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-sm border-bottom border-danger">
+    <a class="navbar-brand fw-bold" href="dashboard.html">
+      <i class="bi bi-fire text-danger me-2"></i>Sabor & Fuego <span class="badge bg-danger ms-2 small">ADMIN</span>
+    </a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <a href="../catalogo.html" class="btn btn-outline-light btn-sm"><i class="bi bi-eye me-1"></i>Ver Menú</a>
+      <button class="btn btn-danger btn-sm" onclick="cerrarSesion()"><i class="bi bi-box-arrow-right me-1"></i>Salir</button>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- SIDEBAR -->
+      <nav class="col-md-3 col-lg-2 d-md-block admin-sidebar p-3">
+        <ul class="nav flex-column">
+          <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2 me-2"></i>Métricas</a></li>
+          <li class="nav-item"><a class="nav-link active" href="pedidos.html"><i class="bi bi-receipt-cutoff me-2"></i>Gestión de Pedidos</a></li>
+          <li class="nav-item"><a class="nav-link" href="productos.html"><i class="bi bi-egg-fried me-2"></i>Platos & Stock</a></li>
+          <li class="nav-item"><a class="nav-link" href="categorias.html"><i class="bi bi-tags me-2"></i>Categorías</a></li>
+          <li class="nav-item"><a class="nav-link" href="usuarios.html"><i class="bi bi-people me-2"></i>Personal & Usuarios</a></li>
+        </ul>
+      </nav>
+
+      <!-- ÁREA PRINCIPAL -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+        <div class="d-flex justify-content-between flex-wrap align-items-center pb-2 mb-3 border-bottom">
+          <div>
+            <h2 class="fw-bold mb-0">Control de Comandas & Cocina</h2>
+            <p class="text-muted small mb-0">Patrón State: Control riguroso de transiciones de estado y asignación de personal</p>
+          </div>
+          <div class="d-flex gap-2">
+            <select id="filtro-estado-select" class="form-select form-select-sm" onchange="filtrarPorEstado()">
+              <option value="todos">Todos los Estados</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="confirmado">Confirmados</option>
+              <option value="en_preparacion">En Preparación</option>
+              <option value="listo_para_servir">Listos para Servir</option>
+              <option value="en_camino">En Camino</option>
+              <option value="entregado">Entregados</option>
+              <option value="cancelado">Cancelados</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- LISTADO DE COMANDAS -->
+        <div class="row g-4" id="pedidos-admin-container">
+          <div class="col-12 text-center py-5">
+            <div class="spinner-border text-danger" role="status"></div>
+            <p class="text-muted mt-2">Sincronizando comandas en vivo...</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL PARA ASIGNAR PERSONAL Y TIEMPO -->
+  <div class="modal fade" id="modalAsignar" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-4 border-0">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title fw-bold">Asignar Personal y Tiempo Estimado</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="modal-pedido-id">
+          <input type="hidden" id="modal-nuevo-estado">
+          
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Asignar Mesero / Repartidor</label>
+            <select id="select-personal" class="form-select">
+              <option value="">Seleccione personal...</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Tiempo Estimado de Espera (Minutos)</label>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-dark btn-sm flex-fill" onclick="setTiempo(10)">10m</button>
+              <button type="button" class="btn btn-outline-dark btn-sm flex-fill" onclick="setTiempo(15)">15m</button>
+              <button type="button" class="btn btn-outline-dark btn-sm flex-fill" onclick="setTiempo(25)">25m</button>
+              <button type="button" class="btn btn-outline-dark btn-sm flex-fill" onclick="setTiempo(40)">40m</button>
+            </div>
+            <input type="number" id="input-tiempo-min" class="form-control form-control-sm mt-2" placeholder="O escribe los minutos..." min="5">
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary-custom" onclick="confirmarAsignacionYTransicion()">Aplicar y Cambiar Estado</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <!-- Capas del Proyecto -->
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/facturacion.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    protegerPagina(["administrador"]);
+
+    let adminUser = null;
+    let listaPedidos = [];
+    let listaPersonal = [];
+    let modalAsignarBS = null;
+
+    async function iniciarPagina(datosUsuario, user) {
+      adminUser = user;
+      modalAsignarBS = new bootstrap.Modal(document.getElementById("modalAsignar"));
+      await cargarPersonal();
+      escucharPedidosEnTiempoReal();
+    }
+
+    async function cargarPersonal() {
+      try {
+        const snap = await db.collection("usuarios").where("rol", "in", ["mesero", "repartidor"]).get();
+        listaPersonal = [];
+        const select = document.getElementById("select-personal");
+        select.innerHTML = '<option value="">Seleccione personal...</option>';
+        snap.forEach(doc => {
+          const u = { id: doc.id, ...doc.data() };
+          listaPersonal.push(u);
+          select.innerHTML += `<option value="${u.id}">${u.nombre} (${u.rol})</option>`;
+        });
+      } catch (err) {
+        console.error("Error al cargar personal:", err);
+      }
+    }
+
+    function escucharPedidosEnTiempoReal() {
+      db.collection("pedidos").onSnapshot(snapshot => {
+        listaPedidos = [];
+        snapshot.forEach(doc => {
+          listaPedidos.push({ id: doc.id, ...doc.data() });
+        });
+        listaPedidos.sort((a, b) => (b.created_at?.toMillis?.() || 0) - (a.created_at?.toMillis?.() || 0));
+        renderizarPedidos();
+      }, err => {
+        console.error("Error en snapshot de pedidos:", err);
+      });
+    }
+
+    function filtrarPorEstado() {
+      renderizarPedidos();
+    }
+
+    function renderizarPedidos() {
+      const container = document.getElementById("pedidos-admin-container");
+      const filtro = document.getElementById("filtro-estado-select").value;
+
+      let filtrados = listaPedidos;
+      if (filtro !== "todos") {
+        filtrados = filtrados.filter(p => p.estado === filtro);
+      }
+
+      if (filtrados.length === 0) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-5">
+            <i class="bi bi-clipboard-check text-muted" style="font-size: 3rem;"></i>
+            <h5 class="text-muted mt-2">No hay comandas con este estado</h5>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtrados.map(p => {
+        const itemsHtml = (p.detalles || []).map(d => `
+          <li class="d-flex justify-content-between align-items-center py-1 border-bottom small">
+            <span><strong>${d.cantidad}x</strong> ${d.nombre_producto}</span>
+            <span class="text-muted">$${d.subtotal.toFixed(2)}</span>
+          </li>
+        `).join("");
+
+        // [PATRÓN STATE]
+        // Botones de acción dinámicos basados en TRANSICIONES_VALIDAS
+        const transicionesPosibles = TRANSICIONES_VALIDAS[p.estado] || [];
+        const botonesTransicionHtml = transicionesPosibles.map(nuevoEstado => {
+          const configBtn = {
+            confirmado: { cls: "btn-success", texto: "Confirmar Comanda", icon: "bi-check-lg" },
+            en_preparacion: { cls: "btn-warning text-dark", texto: "A Cocina", icon: "bi-fire" },
+            listo_para_servir: { cls: "btn-info text-white", texto: "Listo en Barra", icon: "bi-bell" },
+            en_camino: { cls: "btn-primary", texto: "Despachar Delivery", icon: "bi-bicycle" },
+            entregado: { cls: "btn-success", texto: "Marcar Entregado", icon: "bi-check-circle-fill" },
+            cancelado: { cls: "btn-outline-danger", texto: "Cancelar", icon: "bi-x-circle" }
+          }[nuevoEstado] || { cls: "btn-secondary", texto: nuevoEstado, icon: "bi-arrow-right" };
+
+          return `
+            <button class="btn ${configBtn.cls} btn-sm me-1 mb-1" onclick="transicionarPedido('${p.id}', '${nuevoEstado}')">
+              <i class="bi ${configBtn.icon} me-1"></i>${configBtn.texto}
+            </button>
+          `;
+        }).join("");
+
+        return `
+          <div class="col-md-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 d-flex flex-column bg-white">
+              <div class="card-header bg-white py-3 px-3 d-flex justify-content-between align-items-center border-bottom">
+                <div>
+                  <span class="fw-bold text-dark">#${p.id.slice(0, 6).toUpperCase()}</span>
+                  <small class="text-muted d-block">${p.cliente_nombre}</small>
+                </div>
+                <div class="text-end">
+                  <span class="badge-estado badge-${p.estado}">${p.estado.replace(/_/g, " ")}</span>
+                  ${p.tiempo_estimado ? `<span class="badge bg-dark d-block mt-1">~${p.tiempo_estimado} min</span>` : ''}
+                </div>
+              </div>
+
+              <div class="card-body p-3 flex-grow-1">
+                <div class="mb-2 p-2 bg-light rounded-3 small">
+                  <strong>Servicio:</strong> <span class="badge bg-secondary text-capitalize">${p.tipo_servicio}</span> - ${p.mesa_o_direccion}<br>
+                  <strong>Pago:</strong> ${p.forma_pago.toUpperCase()} 
+                  ${p.comprobante_url ? `<a href="${p.comprobante_url}" target="_blank" class="badge bg-primary text-decoration-none ms-1"><i class="bi bi-image"></i> Ver Comprobante</a>` : ''}
+                </div>
+
+                <ul class="list-unstyled mb-3">
+                  ${itemsHtml}
+                </ul>
+
+                ${p.notas_especiales ? `
+                  <div class="p-2 bg-warning-subtle text-dark rounded-2 small mb-3">
+                    <i class="bi bi-chat-left-quote me-1"></i><strong>Nota:</strong> ${p.notas_especiales}
+                  </div>
+                ` : ''}
+
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                  <span class="text-muted small">Total Comanda:</span>
+                  <h5 class="mb-0 fw-bold text-danger">$${p.total.toFixed(2)}</h5>
+                </div>
+              </div>
+
+              <div class="card-footer bg-light p-3 border-top">
+                <div class="mb-2">
+                  <small class="text-muted fw-bold d-block mb-1">Acciones (Patrón State):</small>
+                  ${botonesTransicionHtml || '<span class="badge bg-secondary">Estado Final (Inmutable)</span>'}
+                </div>
+                <div class="pt-2 border-top text-end">
+                  <button class="btn btn-outline-dark btn-sm" onclick="imprimirFactura('${p.id}')">
+                    <i class="bi bi-printer text-danger me-1"></i>Imprimir Factura
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function transicionarPedido(pedidoId, nuevoEstado) {
+      const pedido = listaPedidos.find(p => p.id === pedidoId);
+      if (!pedido) return;
+
+      // Si pasa a 'en_preparacion' o 'en_camino', abrimos el modal para asignar personal / tiempo
+      if (["en_preparacion", "en_camino"].includes(nuevoEstado)) {
+        document.getElementById("modal-pedido-id").value = pedidoId;
+        document.getElementById("modal-nuevo-estado").value = nuevoEstado;
+        modalAsignarBS.show();
+        return;
+      }
+
+      // Si es cancelación, confirmar con el admin
+      if (nuevoEstado === "cancelado") {
+        if (!confirm("¿Deseas cancelar este pedido? Se restaurará automáticamente el stock de los platillos.")) return;
+      }
+
+      try {
+        await cambiarEstadoPedido(pedidoId, pedido, nuevoEstado, adminUser.uid, "Actualizado por Administrador");
+        mostrarToast(`Estado cambiado a ${nuevoEstado}`, "success");
+      } catch (err) {
+        mostrarToast(err.message, "error");
+      }
+    }
+
+    function setTiempo(min) {
+      document.getElementById("input-tiempo-min").value = min;
+    }
+
+    async function confirmarAsignacionYTransicion() {
+      const pedidoId = document.getElementById("modal-pedido-id").value;
+      const nuevoEstado = document.getElementById("modal-nuevo-estado").value;
+      const personalId = document.getElementById("select-personal").value;
+      const minutos = document.getElementById("input-tiempo-min").value;
+      const pedido = listaPedidos.find(p => p.id === pedidoId);
+
+      if (!pedido) return;
+
+      try {
+        if (personalId) {
+          const pers = listaPersonal.find(p => p.id === personalId);
+          await asignarPersonalPedido(pedidoId, personalId, pers ? pers.nombre : "Personal Asignado");
+        }
+        if (minutos) {
+          await actualizarTiempoEstimado(pedidoId, minutos);
+        }
+
+        await cambiarEstadoPedido(pedidoId, pedido, nuevoEstado, adminUser.uid, `Asignado a cocina/personal`);
+        modalAsignarBS.hide();
+        mostrarToast("Comanda actualizada exitosamente", "success");
+      } catch (err) {
+        mostrarToast(err.message, "error");
+      }
+    }
+
+    function imprimirFactura(pedidoId) {
+      const pedido = listaPedidos.find(p => p.id === pedidoId);
+      if (pedido) ModuloFacturacion.imprimirFacturaHTML(pedido);
+    }
+  </script>
+</body>
+</html>

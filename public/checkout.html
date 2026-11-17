@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmación & Facturación | Sabor & Fuego</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <i class="bi bi-fire text-danger me-2"></i>Sabor <span>& Fuego</span>
+      </a>
+      <div class="ms-auto" id="navbar-usuario-slot"></div>
+    </div>
+  </nav>
+
+  <main class="container py-5">
+    <div class="row g-4">
+      
+      <!-- FORMULARIO DE CHECKOUT -->
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-4">
+          <h3 class="fw-bold mb-4"><i class="bi bi-bag-check text-danger me-2"></i>Finalizar Pedido</h3>
+
+          <form id="form-checkout" onsubmit="ejecutarCheckout(event)">
+            
+            <!-- 1. TIPO DE SERVICIO / UBICACIÓN -->
+            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">1. Tipo de Servicio & Ubicación</h5>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <div class="form-check p-3 border rounded-3 h-100 bg-light">
+                  <input class="form-check-input" type="radio" name="tipo_servicio" id="serv-comedor" value="comedor" checked onchange="actualizarTipoServicio()">
+                  <label class="form-check-label fw-bold d-block" for="serv-comedor">
+                    <i class="bi bi-cup-hot text-danger me-1"></i>En Mesa
+                    <small class="text-muted d-block fw-normal">Consumo en restaurante</small>
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-check p-3 border rounded-3 h-100 bg-light">
+                  <input class="form-check-input" type="radio" name="tipo_servicio" id="serv-retiro" value="retiro" onchange="actualizarTipoServicio()">
+                  <label class="form-check-label fw-bold d-block" for="serv-retiro">
+                    <i class="bi bi-box2 text-primary me-1"></i>Para Retiro
+                    <small class="text-muted d-block fw-normal">Llevar en mostrador</small>
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-check p-3 border rounded-3 h-100 bg-light">
+                  <input class="form-check-input" type="radio" name="tipo_servicio" id="serv-delivery" value="delivery" onchange="actualizarTipoServicio()">
+                  <label class="form-check-label fw-bold d-block" for="serv-delivery">
+                    <i class="bi bi-bicycle text-success me-1"></i>Delivery (+$2.00)
+                    <small class="text-muted d-block fw-normal">Envío a domicilio/campus</small>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- DETALLE DE UBICACIÓN DINÁMICO -->
+            <div class="mb-4" id="seccion-ubicacion">
+              <label id="lbl-ubicacion" class="form-label fw-semibold">Número de Mesa o Zona</label>
+              <input type="text" id="input-ubicacion" class="form-control" placeholder="Ej: Mesa 4, Terraza, o Barra" required>
+            </div>
+
+            <!-- 2. DATOS PARA FACTURACIÓN ELECTRÓNICA -->
+            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3 mt-4">
+              <i class="bi bi-receipt text-danger me-1"></i>2. Facturación Electrónica (SRI)
+            </h5>
+            <div class="mb-3">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="tipo_factura" id="fact-final" value="final" checked onchange="toggleDatosFactura()">
+                <label class="form-check-label fw-semibold" for="fact-final">Consumidor Final</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="tipo_factura" id="fact-datos" value="datos" onchange="toggleDatosFactura()">
+                <label class="form-check-label fw-semibold" for="fact-datos">Factura con Datos (RUC / Cédula)</label>
+              </div>
+            </div>
+
+            <div id="seccion-datos-factura" class="p-3 bg-light rounded-3 border mb-4 d-none">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">R.U.C. o Cédula</label>
+                  <input type="text" id="fact-id" class="form-control form-control-sm" placeholder="1312345678001">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Razón Social / Nombre Completo</label>
+                  <input type="text" id="fact-razon" class="form-control form-control-sm" placeholder="Nombre para la factura">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Correo Electrónico (Para envío del XML/PDF)</label>
+                  <input type="email" id="fact-email" class="form-control form-control-sm" placeholder="facturas@ejemplo.com">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Dirección Fiscal</label>
+                  <input type="text" id="fact-dir" class="form-control form-control-sm" placeholder="Ciudad, Calle y Número">
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. PATRÓN STRATEGY: MÉTODO DE PAGO -->
+            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3 mt-4">
+              <i class="bi bi-wallet2 text-danger me-1"></i>3. Forma de Pago
+            </h5>
+            <div class="mb-3">
+              <select id="forma-pago-select" class="form-select" onchange="actualizarCamposPago()">
+                <option value="efectivo">💵 Efectivo (Al recibir / En caja)</option>
+                <option value="transferencia">🏦 Transferencia Bancaria (Subir Comprobante)</option>
+                <option value="tarjeta">💳 Tarjeta de Débito / Crédito</option>
+              </select>
+            </div>
+
+            <!-- CAMPO DINÁMICO TRANSFERENCIA (STRATEGY) -->
+            <div id="campo-comprobante-box" class="p-3 bg-warning-subtle border border-warning rounded-3 mb-4 d-none">
+              <div class="small mb-2">
+                <strong>Datos Bancarios del Restaurante:</strong><br>
+                Banco Pichincha — Cta. Corriente: #2100456789<br>
+                A nombre de: Sabor & Fuego S.A.S. (RUC: 1391784920001)
+              </div>
+              <label class="form-label fw-bold small">Adjuntar Captura del Comprobante *</label>
+              <input type="file" id="comprobante-file" class="form-control form-control-sm" accept="image/*">
+            </div>
+
+            <!-- NOTAS ESPECIALES -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Notas para la cocina o mesero (Opcional)</label>
+              <textarea id="notas-input" class="form-control" rows="2" placeholder="Ej: Sin cebolla, término medio, traer salsa extra..."></textarea>
+            </div>
+
+            <button type="submit" id="btn-confirmar-orden" class="btn btn-primary-custom w-100 py-3 fs-5 fw-bold">
+              <i class="bi bi-check-circle me-2"></i>Confirmar y Enviar a Cocina
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- RESUMEN LATERAL DE LA ORDEN -->
+      <div class="col-lg-4">
+        <div class="cart-summary-box position-sticky" style="top: 85px;">
+          <h5 class="fw-bold mb-3 border-bottom pb-2">Tu Comanda</h5>
+          <div id="checkout-items-list" class="mb-3">
+            <!-- Items del carrito -->
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between mb-2 small text-muted">
+            <span>Subtotal:</span>
+            <span id="sum-subtotal">$0.00</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 small text-muted">
+            <span>I.V.A. (15%):</span>
+            <span id="sum-iva">$0.00</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 small text-muted">
+            <span>Tarifa de Entrega:</span>
+            <span id="sum-envio">$0.00</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between fs-4 fw-bold">
+            <span>Total:</span>
+            <span class="text-danger" id="sum-total">$0.00</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Firebase Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <!-- Capas del Proyecto -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/facturacion.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // [PILAR MOO: POLIMORFISMO]
+    // Protege la página: requiere inicio de sesión
+    protegerPagina(["cliente", "administrador", "mesero", "repartidor"]);
+
+    let usuarioActual = null;
+    let datosUsuarioActual = null;
+    let carrito = [];
+    let tarifaEnvio = 0;
+
+    function iniciarPagina(datosUsuario, user) {
+      usuarioActual = user;
+      datosUsuarioActual = datosUsuario;
+      carrito = JSON.parse(localStorage.getItem("carrito_restaurante") || "[]");
+
+      if (carrito.length === 0) {
+        mostrarToast("Tu comanda está vacía.", "warning");
+        setTimeout(() => window.location.href = "/catalogo.html", 1000);
+        return;
+      }
+
+      // Pre-llenar datos de facturación si existen en el perfil
+      if (datosUsuarioActual) {
+        if (datosUsuarioActual.identificacion) {
+          document.getElementById("fact-id").value = datosUsuarioActual.identificacion;
+        }
+        if (datosUsuarioActual.nombre) {
+          document.getElementById("fact-razon").value = datosUsuarioActual.nombre;
+        }
+        if (datosUsuarioActual.email) {
+          document.getElementById("fact-email").value = datosUsuarioActual.email;
+        }
+      }
+
+      renderizarResumen();
+    }
+
+    function actualizarTipoServicio() {
+      const tipo = document.querySelector('input[name="tipo_servicio"]:checked').value;
+      const lbl = document.getElementById("lbl-ubicacion");
+      const inp = document.getElementById("input-ubicacion");
+
+      if (tipo === "comedor") {
+        tarifaEnvio = 0;
+        lbl.textContent = "Número de Mesa o Zona:";
+        inp.placeholder = "Ej: Mesa 5 (Planta Baja)";
+      } else if (tipo === "retiro") {
+        tarifaEnvio = 0;
+        lbl.textContent = "Nombre de quien retira:";
+        inp.placeholder = "Ej: Juan Pérez";
+      } else if (tipo === "delivery") {
+        tarifaEnvio = (typeof RESTAURANTE_INFO !== "undefined" && RESTAURANTE_INFO.costoEnvioBase) ? RESTAURANTE_INFO.costoEnvioBase : 2.00;
+        lbl.textContent = "Dirección exacta de entrega (Bloque/Piso/Calle):";
+        inp.placeholder = "Ej: Campus ULEAM - Bloque A, Aula 204";
+      }
+      renderizarResumen();
+    }
+
+    function toggleDatosFactura() {
+      const esDatos = document.getElementById("fact-datos").checked;
+      const seccion = document.getElementById("seccion-datos-factura");
+      seccion.classList.toggle("d-none", !esDatos);
+    }
+
+    function actualizarCamposPago() {
+      const metodo = document.getElementById("forma-pago-select").value;
+      const boxComprobante = document.getElementById("campo-comprobante-box");
+      boxComprobante.classList.toggle("d-none", metodo !== "transferencia");
+    }
+
+    function renderizarResumen() {
+      const itemsList = document.getElementById("checkout-items-list");
+      itemsList.innerHTML = carrito.map(i => `
+        <div class="d-flex justify-content-between align-items-center mb-2 small">
+          <div>
+            <span class="fw-bold">${i.cantidad}x</span> ${i.nombre_producto}
+          </div>
+          <span class="fw-semibold text-muted">$${(i.cantidad * i.precio_unitario).toFixed(2)}</span>
+        </div>
+      `).join("");
+
+      const montos = ModuloFacturacion.calcularMontos(carrito, tarifaEnvio);
+      document.getElementById("sum-subtotal").textContent = `$${montos.subtotal.toFixed(2)}`;
+      document.getElementById("sum-iva").textContent = `$${montos.iva.toFixed(2)}`;
+      document.getElementById("sum-envio").textContent = `$${montos.tarifaEnvio.toFixed(2)}`;
+      document.getElementById("sum-total").textContent = `$${montos.total.toFixed(2)}`;
+    }
+
+    // [PATRÓN DE DISEÑO: STRATEGY]
+    async function ejecutarCheckout(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-confirmar-orden");
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando comanda...';
+
+      try {
+        const tipoServicio = document.querySelector('input[name="tipo_servicio"]:checked').value;
+        const ubicacion = document.getElementById("input-ubicacion").value.trim();
+        const formaPago = document.getElementById("forma-pago-select").value;
+        const notas = document.getElementById("notas-input").value.trim();
+
+        // 1. Configurar Estrategia de Pago (Strategy Pattern)
+        const procesador = new ProcesadorPagoContext();
+        if (formaPago === "efectivo") {
+          procesador.setEstrategia(new PagoEfectivoStrategy());
+        } else if (formaPago === "transferencia") {
+          procesador.setEstrategia(new PagoTransferenciaStrategy());
+        } else if (formaPago === "tarjeta") {
+          procesador.setEstrategia(new PagoTarjetaStrategy());
+        }
+
+        const archivoComprobante = document.getElementById("comprobante-file")?.files?.[0];
+        const resultadoPago = await procesador.ejecutarPago({ archivoComprobante });
+
+        // 2. Estructurar Datos de Facturación Electrónica
+        const esFacturaConDatos = document.getElementById("fact-datos").checked;
+        const facturaDatos = esFacturaConDatos ? {
+          tipo: "Factura con RUC/Cédula",
+          identificacion: document.getElementById("fact-id").value.trim(),
+          razon_social: document.getElementById("fact-razon").value.trim(),
+          email: document.getElementById("fact-email").value.trim(),
+          direccion: document.getElementById("fact-dir").value.trim()
+        } : {
+          tipo: "Consumidor Final",
+          identificacion: "9999999999999",
+          razon_social: "CONSUMIDOR FINAL"
+        };
+
+        const montos = ModuloFacturacion.calcularMontos(carrito, tarifaEnvio);
+
+        // 3. Crear Pedido en Firestore usando db.js
+        const nuevoPedido = await crearPedido({
+          cliente_id: usuarioActual.uid,
+          cliente_nombre: datosUsuarioActual.nombre || usuarioActual.email,
+          cliente_email: usuarioActual.email,
+          cliente_telefono: datosUsuarioActual.telefono || "",
+          tipo_servicio: tipoServicio,
+          mesa_o_direccion: ubicacion,
+          forma_pago: formaPago,
+          comprobante_url: resultadoPago.comprobante_url,
+          notas_especiales: notas,
+          subtotal: montos.subtotal,
+          tarifa_envio: montos.tarifaEnvio,
+          iva_monto: montos.iva,
+          total: montos.total,
+          factura_datos: facturaDatos,
+          detalles: carrito
+        });
+
+        // Limpiar comanda local
+        localStorage.removeItem("carrito_restaurante");
+        mostrarToast("¡Orden enviada a cocina exitosamente!", "success");
+
+        // Redirigir a mis pedidos
+        setTimeout(() => {
+          window.location.href = `/mis-pedidos.html?pedido_id=${nuevoPedido.id}`;
+        }, 1200);
+
+      } catch (err) {
+        console.error("Error en el checkout:", err);
+        mostrarToast(err.message || "Error al procesar la comanda.", "error");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Confirmar y Enviar a Cocina';
+      }
+    }
+  </script>
+</body>
+</html>
