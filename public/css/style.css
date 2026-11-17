@@ -1,0 +1,16 @@
+/* Estilos globales y tema del restaurante */
+:root {
+  --primary-color: #e63946;
+  --secondary-color: #1d3557;
+  --accent-color: #f1faee;
+  --background-color: #f8f9fa;
+  --text-color: #2b2d42;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+}
