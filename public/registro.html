@@ -120,7 +120,7 @@
       try {
         await registrarUsuario(nombre, email, pass, telf, iden);
         setTimeout(() => {
-          window.location.href = "/catalogo.html";
+          navegarA("catalogo.html");
         }, 800);
       } catch (err) {
         btn.disabled = false;

@@ -9,6 +9,29 @@
  * 4. [SEGURIDAD] Atajo invisible Ctrl+Shift+A para el panel de administración
  */
 
+// ── 0. RESOLUCIÓN INTELIGENTE DE RUTAS (Soporta Live Server y Firebase Hosting) ─
+/**
+ * Resuelve rutas de forma inteligente para que funcione tanto en Firebase Hosting
+ * (/catalogo.html) como en Live Server de VS Code (/public/catalogo.html).
+ */
+function resolverRuta(ruta) {
+  const clean = ruta.replace(/^\//, "");
+  const path = window.location.pathname;
+
+  // Si se está ejecutando desde Live Server con /public/ en la URL
+  if (path.includes("/public/")) {
+    const base = path.substring(0, path.indexOf("/public/") + 8);
+    return window.location.origin + base + clean;
+  }
+
+  // Si estamos en entorno de hosting donde la raíz es /public
+  return "/" + clean;
+}
+
+function navegarA(ruta) {
+  window.location.href = resolverRuta(ruta);
+}
+
 // ── 1. PATRÓN STATE: MÁQUINA DE ESTADOS FINITOS DE UN PEDIDO ───────────────
 /**
  * [PATRÓN STATE]
@@ -48,7 +71,7 @@ function protegerPagina(rolesPermitidos = []) {
     // Si la ruta requiere roles y no hay usuario autenticado -> Redirige al login
     if (!user) {
       if (rolesPermitidos.length > 0) {
-        window.location.href = "/login.html";
+        navegarA("login.html");
         return;
       }
       // Si la página es pública y tiene iniciarPagina()
@@ -67,9 +90,13 @@ function protegerPagina(rolesPermitidos = []) {
       if (rolesPermitidos.length > 0 && !rolesPermitidos.includes(datosUsuario.rol)) {
         mostrarToast("No tienes permisos para acceder a esta sección.", "warning");
         setTimeout(() => {
-          window.location.href = datosUsuario.rol === "administrador" 
-            ? "/admin/dashboard.html" 
-            : "/catalogo.html";
+          if (datosUsuario.rol === "administrador") {
+            navegarA("admin/dashboard.html");
+          } else if (datosUsuario.rol === "mesero" || datosUsuario.rol === "repartidor") {
+            navegarA("repartidor/entregas.html");
+          } else {
+            navegarA("catalogo.html");
+          }
         }, 1200);
         return;
       }
@@ -107,7 +134,7 @@ document.addEventListener("keydown", async (e) => {
       if (doc.exists && doc.data().rol === "administrador") {
         mostrarToast("Acceso de Administrador concedido...", "success");
         setTimeout(() => {
-          window.location.href = "/admin/dashboard.html";
+          navegarA("admin/dashboard.html");
         }, 600);
       } else {
         mostrarToast("Acceso denegado: Se requiere rol de Administrador", "error");
@@ -188,7 +215,7 @@ async function cerrarSesion() {
     localStorage.removeItem("carrito_restaurante");
     mostrarToast("Sesión cerrada", "info");
     setTimeout(() => {
-      window.location.href = "/login.html";
+      navegarA("login.html");
     }, 500);
   } catch (error) {
     console.error("Error al cerrar sesión:", error);
@@ -249,9 +276,9 @@ function actualizarNavbarUsuario(user, datosUsuario) {
         <span class="badge ${esAdmin ? 'bg-danger' : esPersonal ? 'bg-warning text-dark' : 'bg-primary'} text-capitalize">${datosUsuario.rol || 'cliente'}</span>
       </button>
       <ul class="dropdown-menu dropdown-menu-end shadow">
-        <li><a class="dropdown-item" href="/mis-pedidos.html"><i class="bi bi-receipt me-2"></i>Mis Pedidos & Facturas</a></li>
-        ${esAdmin ? '<li><a class="dropdown-item text-danger fw-bold" href="/admin/dashboard.html"><i class="bi bi-speedometer2 me-2"></i>Panel Administrador</a></li>' : ''}
-        ${esPersonal ? '<li><a class="dropdown-item text-warning fw-bold" href="/repartidor/entregas.html"><i class="bi bi-bicycle me-2"></i>Mis Entregas</a></li>' : ''}
+        <li><a class="dropdown-item" href="${resolverRuta('mis-pedidos.html')}"><i class="bi bi-receipt me-2"></i>Mis Pedidos & Facturas</a></li>
+        ${esAdmin ? `<li><a class="dropdown-item text-danger fw-bold" href="${resolverRuta('admin/dashboard.html')}"><i class="bi bi-speedometer2 me-2"></i>Panel Administrador</a></li>` : ''}
+        ${esPersonal ? `<li><a class="dropdown-item text-warning fw-bold" href="${resolverRuta('repartidor/entregas.html')}"><i class="bi bi-bicycle me-2"></i>Mis Entregas</a></li>` : ''}
         <li><hr class="dropdown-divider"></li>
         <li><button class="dropdown-item text-danger" onclick="cerrarSesion()"><i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión</button></li>
       </ul>

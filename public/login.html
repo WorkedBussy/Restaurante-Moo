@@ -108,11 +108,11 @@
 
     function redirigirPorRol(rol) {
       if (rol === "administrador") {
-        window.location.href = "/admin/dashboard.html";
+        navegarA("admin/dashboard.html");
       } else if (rol === "mesero" || rol === "repartidor") {
-        window.location.href = "/repartidor/entregas.html";
+        navegarA("repartidor/entregas.html");
       } else {
-        window.location.href = "/catalogo.html";
+        navegarA("catalogo.html");
       }
     }
   </script>

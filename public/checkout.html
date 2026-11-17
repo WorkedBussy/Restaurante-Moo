@@ -201,7 +201,7 @@
 
       if (carrito.length === 0) {
         mostrarToast("Tu comanda está vacía.", "warning");
-        setTimeout(() => window.location.href = "/catalogo.html", 1000);
+        setTimeout(() => navegarA("catalogo.html"), 1000);
         return;
       }
 
@@ -339,7 +339,7 @@
 
         // Redirigir a mis pedidos
         setTimeout(() => {
-          window.location.href = `/mis-pedidos.html?pedido_id=${nuevoPedido.id}`;
+          navegarA(`mis-pedidos.html?pedido_id=${nuevoPedido.id}`);
         }, 1200);
 
       } catch (err) {
